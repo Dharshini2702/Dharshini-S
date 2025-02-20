@@ -1,0 +1,74 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+# Load the dataset
+url = "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df = pd.read_csv(url)
+
+# Task 2.1: Boxplot for MEDV
+plt.figure(figsize=(8, 5))
+sns.boxplot(y=df['medv'])
+plt.title('Boxplot of Median Value of Owner-Occupied Homes')
+plt.ylabel('MEDV ($1000s)')
+plt.show()
+
+# Task 2.2: Bar plot for Charles River variable
+plt.figure(figsize=(6, 4))
+sns.countplot(x=df['chas'])
+plt.title('Bar Plot of Charles River Variable')
+plt.xlabel('Bounded by River (0 = No, 1 = Yes)')
+plt.ylabel('Count')
+plt.show()
+
+# Task 2.3: Boxplot for MEDV vs Discretized AGE
+bins = [0, 35, 70, df['age'].max()]
+labels = ['<=35 years', '35-70 years', '>70 years']
+df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels)
+
+plt.figure(figsize=(8, 5))
+sns.boxplot(x=df['age_group'], y=df['medv'])
+plt.title('Boxplot of MEDV vs AGE Group')
+plt.xlabel('Age Group')
+plt.ylabel('MEDV ($1000s)')
+plt.show()
+
+# Task 2.4: Scatter plot of NOX vs INDUS
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x=df['nox'], y=df['indus'])
+plt.title('Scatter Plot of NOX vs INDUS')
+plt.xlabel('Nitric Oxide Concentration')
+plt.ylabel('Proportion of Non-Retail Business Acres')
+plt.show()
+
+# Task 2.5: Histogram for Pupil-Teacher Ratio
+plt.figure(figsize=(8, 5))
+sns.histplot(df['ptratio'], bins=15, kde=True)
+plt.title('Histogram of Pupil-Teacher Ratio')
+plt.xlabel('Pupil-Teacher Ratio')
+plt.ylabel('Frequency')
+plt.show()
+
+# Task 3: Hypothesis Testing
+alpha = 0.05
+
+# T-test for Independent Samples (MEDV vs CHAS)
+t_stat, p_value = stats.ttest_ind(df[df['chas'] == 1]['medv'], df[df['chas'] == 0]['medv'])
+print("T-test for CHAS:", "Significant difference" if p_value < alpha else "No significant difference")
+
+# ANOVA for MEDV vs AGE groups
+anova_result = stats.f_oneway(df[df['age_group'] == '<=35 years']['medv'],
+                              df[df['age_group'] == '35-70 years']['medv'],
+                              df[df['age_group'] == '>70 years']['medv'])
+print("ANOVA for AGE Groups:", "Significant difference" if anova_result.pvalue < alpha else "No significant difference")
+
+# Pearson Correlation (NOX vs INDUS)
+correlation, p_value = stats.pearsonr(df['nox'], df['indus'])
+print("Pearson Correlation NOX vs INDUS:", "Significant relationship" if p_value < alpha else "No significant relationship")
+
+# Regression Analysis (DIS vs MEDV)
+model = smf.ols('medv ~ dis', data=df).fit()
+print(model.summary())
